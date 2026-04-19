@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TruckMate — Move Anything. Anywhere in Australia.</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sand: #f5ede0;
+    --clay: #c4773a;
+    --rust: #a85227;
+    --dark: #1c1510;
+    --charcoal: #2d2520;
+    --warm-grey: #8a7e75;
+    --cream: #fdf8f2;
+    --sky: #4a9eba;
+    --olive: #6b7c3e;
+    --border: #ddd3c4;
+    --success: #3d7a4b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--dark); }
+
+  /* NAV */
+  nav {
+    background: var(--dark);
+    padding: 0 5vw;
+    display: flex; justify-content: space-between; align-items: center;
+    height: 60px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 900;
+    color: var(--sand);
+  }
+  .nav-logo em { color: var(--clay); font-style: normal; }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a { color: var(--warm-grey); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--sand); }
+  .nav-cta {
+    background: var(--clay); color: #fff;
+    padding: 8px 20px; border-radius: 4px;
+    font-size: 13px; font-weight: 600;
+    text-decoration: none; transition: background 0.2s;
+  }
+  .nav-cta:hover { background: var(--rust); }
+
+  /* HERO */
+  .hero {
+    background: var(--dark);
+    padding: 80px 5vw 60px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    right: -100px; top: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(196,119,58,0.15), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(196,119,58,0.15);
+    border: 1px solid rgba(196,119,58,0.3);
+    color: var(--clay); padding: 4px 14px;
+    font-size: 12px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; border-radius: 2px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 4vw, 56px);
+    font-weight: 900; line-height: 1.1;
+    color: var(--sand);
+    margin-bottom: 20px;
+  }
+  h1 em { color: var(--clay); font-style: italic; }
+  .hero-desc {
+    font-size: 16px; color: var(--warm-grey); line-height: 1.7;
+    margin-bottom: 32px;
+  }
+  .hero-stats { display: flex; gap: 32px; margin-bottom: 36px; }
+  .stat { }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px; font-weight: 900; color: var(--clay);
+  }
+  .stat-label { font-size: 12px; color: var(--warm-grey); margin-top: 2px; }
+  .hero-scroll-cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--clay); color: #fff;
+    padding: 14px 28px; border-radius: 4px;
+    font-weight: 600; font-size: 15px;
+    cursor: pointer; border: none;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .hero-scroll-cta:hover { background: var(--rust); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(196,119,58,0.3); }
+
+  /* HERO MAP PREVIEW */
+  .hero-map-preview {
+    position: relative;
+  }
+  .hero-map-card {
+    background: var(--charcoal);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+  }
+  .hmc-header {
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--warm-grey); display: flex; gap: 8px; align-items: center;
+  }
+  .hmc-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .hmc-dot.r { background: #ef4444; }
+  .hmc-dot.y { background: var(--clay); }
+  .hmc-dot.g { background: var(--success); }
+  .hmc-body { padding: 16px; }
+  .hmc-img { width: 100%; display: block; }
+
+  /* preview SVG */
+  .preview-svg { width: 100%; }
+  .ps-state { fill: #2a3520; stroke: #3a4530; stroke-width: 0.8; }
+  .ps-route { stroke: var(--clay); stroke-width: 2; fill: none; stroke-dasharray: 6 3; animation: dashMove 2s linear infinite; }
+  @keyframes dashMove { to { stroke-dashoffset: -27; } }
+  .ps-city { fill: var(--warm-grey); }
+  .ps-city.active { fill: var(--clay); r: 6; filter: drop-shadow(0 0 5px var(--clay)); }
+  .ps-label { font-family: 'DM Mono', monospace; font-size: 10px; fill: #6a6055; }
+  .ps-label.active { fill: var(--clay); }
+  .ps-pip { fill: #4a9eba; r: 3; opacity: 0.5; }
+
+  /* USP STRIP */
+  .usp-strip {
+    background: var(--clay);
+    padding: 0;
+    display: flex; overflow-x: auto;
+  }
+  .usp-item {
+    flex: 1; min-width: 200px;
+    padding: 18px 24px;
+    border-right: 1px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .usp-icon { font-size: 22px; }
+  .usp-text { }
+  .usp-title { font-size: 13px; font-weight: 600; color: #fff; }
+  .usp-sub { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+
+  /* MAIN CONTENT */
+  .content-split {
+    display: grid;
+    grid-template-columns: 1fr 520px;
+    gap: 0;
+    min-height: 100vh;
+  }
+
+  /* MAP COLUMN */
+  .map-col {
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+    background: var(--sand);
+    overflow: hidden;
+  }
+  .map-col-inner {
+    height: 100%;
+    display: flex; flex-direction: column;
+  }
+  .map-col-header {
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mch-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 700; color: var(--dark);
+    margin-bottom: 4px;
+  }
+  .mch-sub { font-size: 13px; color: var(--warm-grey); }
+
+  /* Route pills */
+  .route-pills {
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 12px; align-items: center;
+  }
+  .pill {
+    flex: 1; padding: 8px 12px;
+    border-radius: 4px; border: 1.5px dashed var(--border);
+    text-align: center;
+  }
+  .pill.set { border-style: solid; border-color: var(--clay); background: rgba(196,119,58,0.08); }
+  .pill-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--warm-grey); }
+  .pill-label.pickup { color: var(--olive); }
+  .pill-label.dropoff { color: var(--rust); }
+  .pill-city { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; color: var(--dark); margin-top: 2px; }
+  .pill-empty { font-size: 12px; color: var(--border); font-style: italic; margin-top: 2px; }
+  .pill-arrow { color: var(--clay); font-size: 20px; }
+
+  .map-svg-wrap { flex: 1; position: relative; overflow: hidden; }
+  svg#map2 { width: 100%; height: 100%; display: block; }
+
+  .m2-state { fill: #e8dfd4; stroke: #c9bfb5; stroke-width: 1; cursor: pointer; transition: fill 0.2s; }
+  .m2-state:hover { fill: #ddd5c8; }
+  .m2-city { cursor: pointer; }
+  .m2-dot { fill: var(--warm-grey); stroke: var(--cream); stroke-width: 1.5; transition: all 0.2s; r: 5; }
+  .m2-dot:hover, .m2-dot.hover { fill: var(--clay); r: 7; }
+  .m2-dot.pickup { fill: var(--olive); r: 9; filter: drop-shadow(0 0 5px var(--olive)); }
+  .m2-dot.dropoff { fill: var(--rust); r: 9; filter: drop-shadow(0 0 5px var(--rust)); }
+  .m2-label { font-family: 'DM Mono', monospace; font-size: 11px; fill: var(--warm-grey); pointer-events: none; }
+  .m2-route { stroke: var(--clay); stroke-width: 2.5; fill: none; stroke-dasharray: 10 5; animation: dashMove 1.5s linear infinite; filter: drop-shadow(0 0 3px rgba(196,119,58,0.5)); }
+
+  .map-hint {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    background: rgba(28,21,16,0.85); color: var(--sand);
+    font-size: 12px; font-weight: 500; padding: 8px 16px;
+    border-radius: 20px; backdrop-filter: blur(4px);
+    white-space: nowrap;
+  }
+
+  .dist-badge {
+    position: absolute; bottom: 56px; right: 20px;
+    background: var(--clay); color: #fff;
+    padding: 10px 16px; border-radius: 6px;
+    display: none;
+  }
+  .dist-badge.show { display: block; }
+  .db-km { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; }
+  .db-label { font-size: 11px; opacity: 0.85; }
+
+  /* FORM COLUMN */
+  .form-col {
+    background: var(--cream);
+    border-left: 1px solid var(--border);
+    padding: 40px 40px;
+    overflow-y: auto;
+  }
+  .fc-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 900; color: var(--dark);
+    margin-bottom: 6px;
+  }
+  .fc-sub { font-size: 14px; color: var(--warm-grey); line-height: 1.6; margin-bottom: 30px; }
+
+  /* Form accordion sections */
+  .acc-section { margin-bottom: 28px; }
+  .acc-head {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+  }
+  .acc-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--clay); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  .acc-title { font-size: 15px; font-weight: 600; color: var(--dark); }
+
+  .fg { margin-bottom: 14px; }
+  .fg label { display: block; font-size: 12px; font-weight: 600; color: var(--warm-grey); margin-bottom: 5px; letter-spacing: 0.5px; }
+  .fg input, .fg select, .fg textarea {
+    width: 100%;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    color: var(--dark); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; padding: 10px 14px;
+    transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+  }
+  .fg input:focus, .fg select:focus, .fg textarea:focus {
+    border-color: var(--clay); box-shadow: 0 0 0 3px rgba(196,119,58,0.12);
+  }
+  .fg textarea { resize: vertical; min-height: 80px; }
+  .fg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .fg-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  /* Type cards */
+  .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .type-card {
+    border: 1.5px solid var(--border); border-radius: 6px;
+    padding: 10px 8px; text-align: center; cursor: pointer;
+    transition: all 0.15s; background: #fff;
+  }
+  .type-card:hover { border-color: var(--clay); }
+  .type-card.selected { border-color: var(--clay); background: rgba(196,119,58,0.06); }
+  .tc-icon { font-size: 20px; margin-bottom: 4px; }
+  .tc-label { font-size: 11px; font-weight: 600; color: var(--dark); line-height: 1.2; }
+
+  /* Priority selector */
+  .priority-group { display: flex; gap: 10px; }
+  .pri-btn {
+    flex: 1; padding: 10px 8px; border-radius: 6px;
+    border: 1.5px solid var(--border); background: #fff;
+    text-align: center; cursor: pointer; transition: all 0.15s;
+  }
+  .pri-btn.active { border-color: var(--clay); background: rgba(196,119,58,0.08); }
+  .pb-name { font-size: 12px; font-weight: 600; color: var(--dark); }
+  .pb-time { font-size: 10px; color: var(--warm-grey); margin-top: 2px; }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* Submit */
+  .submit-section { }
+  .submit-btn2 {
+    width: 100%; padding: 16px 24px;
+    background: var(--clay); color: #fff;
+    border: none; border-radius: 6px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600;
+    transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .submit-btn2:hover { background: var(--rust); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(168,82,39,0.3); }
+  .trust-row {
+    display: flex; gap: 16px; margin-top: 14px;
+    font-size: 12px; color: var(--warm-grey);
+    align-items: center; justify-content: center;
+  }
+  .trust-item { display: flex; align-items: center; gap: 5px; }
+
+  /* SUCCESS */
+  .success-overlay {
+    display: none; position: fixed; inset: 0; z-index: 300;
+    background: rgba(28,21,16,0.8); backdrop-filter: blur(8px);
+    justify-content: center; align-items: center;
+  }
+  .success-overlay.show { display: flex; }
+  .success-card {
+    background: var(--cream); border-radius: 12px;
+    padding: 48px 40px; text-align: center; max-width: 400px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.3);
+  }
+  .sc-icon { font-size: 56px; margin-bottom: 16px; }
+  .sc-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; color: var(--dark); }
+  .sc-msg { font-size: 15px; color: var(--warm-grey); margin-top: 10px; line-height: 1.7; }
+  .sc-close { margin-top: 28px; padding: 12px 32px; background: var(--clay); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
+
+  @media (max-width: 1000px) {
+    .content-split { grid-template-columns: 1fr; }
+    .map-col { position: relative; height: 50vh; top: 0; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-map-preview { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Truck<em>Mate</em></div>
+  <div class="nav-links">
+    <a href="#">How It Works</a>
+    <a href="#">Services</a>
+    <a href="#">Coverage</a>
+    <a href="#">About</a>
+  </div>
+  <a href="#quote" class="nav-cta">Get a Quote</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-tag">🚛 Australia's Trusted Truck Relocators</div>
+    <h1>Move <em>Any Truck</em> Across Australia</h1>
+    <p class="hero-desc">Whether it's a single rigid or a full road train, TruckMate handles truck relocation coast to coast. Licensed, insured, and obsessive about keeping your schedule.</p>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">3,200+</div><div class="stat-label">Trucks Relocated</div></div>
+      <div class="stat"><div class="stat-num">48hrs</div><div class="stat-label">Avg Response Time</div></div>
+      <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Fully Insured</div></div>
+    </div>
+    <a href="#quote" class="hero-scroll-cta">Plan Your Route →</a>
+  </div>
+  <div class="hero-map-preview">
+    <div class="hero-map-card">
+      <div class="hmc-header">
+        <span class="hmc-dot r"></span><span class="hmc-dot y"></span><span class="hmc-dot g"></span>
+        &nbsp; Route Preview — Perth → Sydney
+      </div>
+      <div class="hmc-body">
+        <svg class="preview-svg" viewBox="0 0 360 300" xmlns="http://www.w3.org/2000/svg">
+          <rect width="360" height="300" fill="#1e1a16"/>
+          <!-- simplified states -->
+          <polygon class="ps-state" points="30,30 120,30 120,42 128,55 132,80 135,160 128,190 120,210 105,225 85,232 65,230 48,218 36,198 30,170 28,100 28,58"/>
+          <polygon class="ps-state" points="135,30 198,30 198,160 175,160 135,160 132,80 128,55 120,42 120,30"/>
+          <polygon class="ps-state" points="198,30 270,30 282,55 288,82 285,115 278,138 265,158 248,170 232,175 215,170 198,160 198,30"/>
+          <polygon class="ps-state" points="135,160 198,160 198,208 190,216 178,222 162,226 148,226 138,222 130,213 128,190 135,160"/>
+          <polygon class="ps-state" points="198,160 248,170 258,183 252,200 240,212 220,220 200,224 195,218 195,208 198,160"/>
+          <polygon class="ps-state" points="178,222 195,218 200,224 210,234 205,244 193,250 178,252 163,248 155,237 158,228 162,226"/>
+          <ellipse class="ps-state" cx="218" cy="274" rx="18" ry="14"/>
+          <!-- route line -->
+          <line class="ps-route" x1="60" y1="185" x2="235" y2="200" style="stroke-dashoffset:0"/>
+          <!-- cities -->
+          <circle class="ps-city active" cx="60" cy="185" r="6" fill="#c4773a" filter="url(#glow)"/>
+          <text class="ps-label active" x="70" y="183" fill="#c4773a">Perth</text>
+          <circle class="ps-city active" cx="235" cy="200" r="6" fill="#c4773a"/>
+          <text class="ps-label active" x="245" y="198" fill="#c4773a">Sydney</text>
+          <circle class="ps-pip" cx="162" cy="205" r="3" fill="#4a9eba" opacity="0.5"/>
+          <circle class="ps-pip" cx="158" cy="120" r="3" fill="#4a9eba" opacity="0.4"/>
+          <circle class="ps-pip" cx="261" cy="148" r="3" fill="#4a9eba" opacity="0.4"/>
+          <text class="ps-label" x="130" y="100" fill="#5a5048">Darwin</text>
+          <circle cx="158" cy="110" r="3" fill="#4a4038"/>
+          <text class="ps-label" x="165" y="108" fill="#5a5048">Alice Sp.</text>
+          <text class="ps-label" x="262" y="148" fill="#5a5048">Brisbane</text>
+          <text class="ps-label" x="157" y="215" fill="#5a5048">Adelaide</text>
+          <text class="ps-label" x="200" y="238" fill="#5a5048">Melbourne</text>
+          <!-- distance tag -->
+          <rect x="120" y="185" width="90" height="24" rx="12" fill="rgba(196,119,58,0.15)" stroke="rgba(196,119,58,0.3)" stroke-width="1"/>
+          <text x="165" y="201" fill="#c4773a" font-family="DM Mono, monospace" font-size="11" text-anchor="middle">~4,100 km</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- USP STRIP -->
+<div class="usp-strip">
+  <div class="usp-item"><span class="usp-icon">🗺️</span><div class="usp-text"><div class="usp-title">Nationwide Coverage</div><div class="usp-sub">All states & territories</div></div></div>
+  <div class="usp-item"><span class="usp-icon">🛡️</span><div class="usp-text"><div class="usp-title">Fully Insured</div><div class="usp-sub">Comprehensive transit cover</div></div></div>
+  <div class="usp-item"><span class="usp-icon">⚡</span><div class="usp-text"><div class="usp-title">Fast Quotes</div><div class="usp-sub">Response within 2 hours</div></div></div>
+  <div class="usp-item"><span class="usp-icon">📋</span><div class="usp-text"><div class="usp-title">Permit Handling</div><div class="usp-sub">Oversize & overdimensional</div></div></div>
+  <div class="usp-item" style="border-right:none"><span class="usp-icon">🤝</span><div class="usp-text"><div class="usp-title">Dedicated Manager</div><div class="usp-sub">One contact, end to end</div></div></div>
+</div>
+
+<!-- SPLIT LAYOUT -->
+<div class="content-split" id="quote">
+  <!-- STICKY MAP -->
+  <div class="map-col">
+    <div class="map-col-inner">
+      <div class="map-col-header">
+        <div class="mch-title">Select Your Route</div>
+        <div class="mch-sub" id="map2-hint">Click a city to set your pickup location</div>
+      </div>
+      <div class="route-pills">
+        <div class="pill" id="pill-pickup">
+          <div class="pill-label pickup">PICKUP</div>
+          <div class="pill-empty" id="pill-p-empty">Click a city</div>
+          <div class="pill-city" id="pill-p-city" style="display:none"></div>
+        </div>
+        <div class="pill-arrow">→</div>
+        <div class="pill" id="pill-dropoff">
+          <div class="pill-label dropoff">DROP-OFF</div>
+          <div class="pill-empty" id="pill-d-empty">Then click another</div>
+          <div class="pill-city" id="pill-d-city" style="display:none"></div>
+        </div>
+      </div>
+      <div class="map-svg-wrap">
+        <svg id="map2" viewBox="0 0 500 430" xmlns="http://www.w3.org/2000/svg">
+          <rect width="500" height="430" fill="#f0e8de"/>
+          <!-- States -->
+          <polygon class="m2-state" points="50,50 175,50 175,65 188,82 194,120 197,214 188,240 175,268 154,285 126,296 100,295 75,278 57,252 48,220 43,155 43,90"/>
+          <polygon class="m2-state" points="197,50 278,50 278,50 278,215 250,215 197,215 194,120 188,82 175,65 175,50"/>
+          <polygon class="m2-state" points="278,50 378,50 396,86 404,130 401,175 391,209 373,240 349,263 322,275 300,270 278,215 278,50"/>
+          <polygon class="m2-state" points="197,215 278,215 278,282 266,295 249,305 228,311 210,311 196,305 185,293 183,266 188,240 197,215"/>
+          <polygon class="m2-state" points="278,215 322,275 333,292 325,315 308,330 282,340 258,342 240,332 228,311 249,305 266,295 278,282 278,215"/>
+          <polygon class="m2-state" points="249,305 258,342 268,358 260,372 244,380 224,382 204,375 196,360 201,344 210,331 228,311"/>
+          <ellipse class="m2-state" cx="300" cy="400" rx="28" ry="22"/>
+          <!-- Route line -->
+          <line id="m2-route" class="m2-route" x1="0" y1="0" x2="0" y2="0" style="display:none"/>
+          <!-- Cities -->
+          <g class="m2-city" data-city="Perth" data-x="72" data-y="232">
+            <circle class="m2-dot" id="m2-Perth" cx="72" cy="232" r="5"/>
+            <text class="m2-label" x="83" y="236">Perth</text>
+          </g>
+          <g class="m2-city" data-city="Darwin" data-x="222" data-y="68">
+            <circle class="m2-dot" id="m2-Darwin" cx="222" cy="68" r="5"/>
+            <text class="m2-label" x="233" y="72">Darwin</text>
+          </g>
+          <g class="m2-city" data-city="Adelaide" data-x="235" data-y="284">
+            <circle class="m2-dot" id="m2-Adelaide" cx="235" cy="284" r="5"/>
+            <text class="m2-label" x="246" y="280">Adelaide</text>
+          </g>
+          <g class="m2-city" data-city="Melbourne" data-x="286" data-y="342">
+            <circle class="m2-dot" id="m2-Melbourne" cx="286" cy="342" r="5"/>
+            <text class="m2-label" x="294" y="338">Melbourne</text>
+          </g>
+          <g class="m2-city" data-city="Sydney" data-x="340" data-y="308">
+            <circle class="m2-dot" id="m2-Sydney" cx="340" cy="308" r="5"/>
+            <text class="m2-label" x="351" y="312">Sydney</text>
+          </g>
+          <g class="m2-city" data-city="Brisbane" data-x="374" data-y="222">
+            <circle class="m2-dot" id="m2-Brisbane" cx="374" cy="222" r="5"/>
+            <text class="m2-label" x="384" y="218">Brisbane</text>
+          </g>
+          <g class="m2-city" data-city="Alice Springs" data-x="237" data-y="175">
+            <circle class="m2-dot" id="m2-AliceSprings" cx="237" cy="175" r="5"/>
+            <text class="m2-label" x="248" y="171">Alice Sp.</text>
+          </g>
+          <g class="m2-city" data-city="Cairns" data-x="360" data-y="92">
+            <circle class="m2-dot" id="m2-Cairns" cx="360" cy="92" r="5"/>
+            <text class="m2-label" x="368" y="88">Cairns</text>
+          </g>
+          <g class="m2-city" data-city="Hobart" data-x="300" data-y="400">
+            <circle class="m2-dot" id="m2-Hobart" cx="300" cy="400" r="5"/>
+            <text class="m2-label" x="310" y="397">Hobart</text>
+          </g>
+        </svg>
+        <div class="map-hint" id="map2-hint-bottom">📍 Click any city to begin</div>
+        <div class="dist-badge" id="dist-badge">
+          <div class="db-km" id="db-km">-- km</div>
+          <div class="db-label" id="db-label">estimated distance</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUOTE FORM -->
+  <div class="form-col">
+    <div class="fc-title">Request a Quote</div>
+    <p class="fc-sub">Fill in your details below and our team will contact you within 2 business hours with a tailored quote.</p>
+
+    <!-- Section 1: Contact -->
+    <div class="acc-section">
+      <div class="acc-head"><div class="acc-num">1</div><div class="acc-title">Your Contact Details</div></div>
+      <div class="fg-row">
+        <div class="fg"><label>First Name *</label><input type="text" id="f2-fname" placeholder="John" required></div>
+        <div class="fg"><label>Last Name *</label><input type="text" id="f2-lname" placeholder="Smith" required></div>
+      </div>
+      <div class="fg"><label>Company Name</label><input type="text" id="f2-company" placeholder="Smith Haulage Pty Ltd"></div>
+      <div class="fg-row">
+        <div class="fg"><label>Phone Number *</label><input type="tel" id="f2-phone" placeholder="04XX XXX XXX" required></div>
+        <div class="fg"><label>Email Address *</label><input type="email" id="f2-email" placeholder="john@company.com.au" required></div>
+      </div>
+      <div class="fg">
+        <label>How would you prefer we contact you?</label>
+        <select id="f2-contact-pref">
+          <option>Call me first</option>
+          <option>Email me first</option>
+          <option>Either — quickest is fine</option>
+          <option>WhatsApp / SMS preferred</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Section 2: Vehicle -->
+    <div class="acc-section">
+      <div class="acc-head"><div class="acc-num">2</div><div class="acc-title">Vehicle Information</div></div>
+      <div class="fg">
+        <label>Vehicle Type *</label>
+        <div class="type-grid">
+          <div class="type-card" onclick="selectType(this,'Rigid Truck')"><div class="tc-icon">🚛</div><div class="tc-label">Rigid Truck</div></div>
+          <div class="type-card" onclick="selectType(this,'Semi-Trailer')"><div class="tc-icon">🚚</div><div class="tc-label">Semi-Trailer</div></div>
+          <div class="type-card" onclick="selectType(this,'B-Double')"><div class="tc-icon">🚜</div><div class="tc-label">B-Double</div></div>
+          <div class="type-card" onclick="selectType(this,'Road Train')"><div class="tc-icon">🛻</div><div class="tc-label">Road Train</div></div>
+          <div class="type-card" onclick="selectType(this,'Refrigerated')"><div class="tc-icon">❄️</div><div class="tc-label">Refrigerated</div></div>
+          <div class="type-card" onclick="selectType(this,'Other')"><div class="tc-icon">⚙️</div><div class="tc-label">Other</div></div>
+        </div>
+        <input type="hidden" id="f2-truck-type" value="">
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Make</label><input type="text" id="f2-make" placeholder="e.g. Kenworth"></div>
+        <div class="fg"><label>Model</label><input type="text" id="f2-model" placeholder="e.g. T610SAR"></div>
+      </div>
+      <div class="fg"><label>Year</label><input type="number" id="f2-year" placeholder="e.g. 2019"></div>
+      <div class="fg"><label>Dimensions (Length × Width × Height in metres)</label></div>
+      <div class="fg-row3">
+        <div class="fg"><label>Length (m)</label><input type="number" id="f2-len" placeholder="0.0" step="0.1"></div>
+        <div class="fg"><label>Width (m)</label><input type="number" id="f2-wid" placeholder="0.0" step="0.1"></div>
+        <div class="fg"><label>Height (m)</label><input type="number" id="f2-hgt" placeholder="0.0" step="0.1"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>GVM / Weight (tonnes)</label><input type="number" id="f2-weight" placeholder="0.0" step="0.1"></div>
+        <div class="fg">
+          <label>Running Condition</label>
+          <select id="f2-condition">
+            <option>Self-propelled (drives on/off)</option>
+            <option>Non-running (tow required)</option>
+            <option>Partially operational</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Is the vehicle oversize / overdimensional?</label>
+        <select id="f2-oversize">
+          <option>No — standard dimensions</option>
+          <option>Yes — requires permit</option>
+          <option>Unsure — please advise</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Section 3: Shipment -->
+    <div class="acc-section">
+      <div class="acc-head"><div class="acc-num">3</div><div class="acc-title">Shipment Details</div></div>
+      <div class="fg-row">
+        <div class="fg"><label>Desired Pickup Date</label><input type="date" id="f2-date"></div>
+        <div class="fg">
+          <label>Date Flexibility</label>
+          <select id="f2-flex">
+            <option>Exact date required</option>
+            <option>± 1–2 days</option>
+            <option>± 1 week</option>
+            <option>Fully flexible</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Service Priority</label>
+        <div class="priority-group">
+          <div class="pri-btn active" onclick="selectPri(this,'Standard')">
+            <div class="pb-name">Standard</div><div class="pb-time">Regular schedule</div>
+          </div>
+          <div class="pri-btn" onclick="selectPri(this,'Expedited')">
+            <div class="pb-name">Expedited</div><div class="pb-time">Faster delivery</div>
+          </div>
+          <div class="pri-btn" onclick="selectPri(this,'Emergency')">
+            <div class="pb-name">Emergency</div><div class="pb-time">ASAP dispatch</div>
+          </div>
+        </div>
+        <input type="hidden" id="f2-priority" value="Standard">
+      </div>
+      <div class="fg">
+        <label>Additional Notes or Special Requirements</label>
+        <textarea id="f2-notes" placeholder="Permits, access restrictions, hazardous materials, load securing requirements, insurance needs, preferred routes..."></textarea>
+      </div>
+    </div>
+
+    <div class="submit-section">
+      <button class="submit-btn2" onclick="submitForm2()">
+        🚛 Send My Quote Request
+      </button>
+      <div class="trust-row">
+        <div class="trust-item">🔒 Secure & Private</div>
+        <div class="trust-item">⚡ 2-Hour Response</div>
+        <div class="trust-item">✅ No Obligation</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-overlay" id="sov2">
+  <div class="success-card">
+    <div class="sc-icon">🎉</div>
+    <div class="sc-title">Quote Request Sent!</div>
+    <p class="sc-msg">Thank you! Your request is on its way to our team. We'll be in touch within 2 business hours via your preferred contact method.</p>
+    <button class="sc-close" onclick="document.getElementById('sov2').classList.remove('show')">Done</button>
+  </div>
+</div>
+
+<script>
+  const cityCoords2 = {
+    'Perth': { lat: -31.9, lng: 115.9 },
+    'Darwin': { lat: -12.5, lng: 130.8 },
+    'Adelaide': { lat: -34.9, lng: 138.6 },
+    'Melbourne': { lat: -37.8, lng: 145.0 },
+    'Sydney': { lat: -33.9, lng: 151.2 },
+    'Brisbane': { lat: -27.5, lng: 153.0 },
+    'Alice Springs': { lat: -23.7, lng: 133.9 },
+    'Cairns': { lat: -16.9, lng: 145.8 },
+    'Hobart': { lat: -42.9, lng: 147.3 }
+  };
+
+  function haversine2(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2-lat1)*Math.PI/180;
+    const dLng = (lng2-lng1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+  }
+
+  let p2 = null, d2 = null, px = 0, py = 0, dx = 0, dy = 0;
+  let mapStep = 'pickup';
+
+  document.querySelectorAll('.m2-city').forEach(city => {
+    city.addEventListener('click', function() {
+      const name = this.dataset.city;
+      const cx = parseFloat(this.dataset.x);
+      const cy = parseFloat(this.dataset.y);
+      const dot = this.querySelector('.m2-dot');
+
+      if (mapStep === 'pickup') {
+        document.querySelectorAll('.m2-dot').forEach(d => { d.classList.remove('pickup','dropoff'); });
+        p2 = name; px = cx; py = cy;
+        dot.classList.add('pickup');
+        document.getElementById('pill-p-empty').style.display = 'none';
+        document.getElementById('pill-p-city').style.display = 'block';
+        document.getElementById('pill-p-city').textContent = name;
+        document.getElementById('pill-pickup').classList.add('set');
+        document.getElementById('f-p2').value = name;
+        d2 = null;
+        document.getElementById('pill-d-empty').style.display = 'block';
+        document.getElementById('pill-d-city').style.display = 'none';
+        document.getElementById('pill-dropoff').classList.remove('set');
+        document.getElementById('m2-route').style.display = 'none';
+        document.getElementById('dist-badge').classList.remove('show');
+        document.getElementById('map2-hint').textContent = 'Now click your drop-off city';
+        document.getElementById('map2-hint-bottom').textContent = '📍 Click drop-off city';
+        mapStep = 'dropoff';
+      } else {
+        if (name === p2) return;
+        d2 = name; dx = cx; dy = cy;
+        dot.classList.add('dropoff');
+        document.getElementById('pill-d-empty').style.display = 'none';
+        document.getElementById('pill-d-city').style.display = 'block';
+        document.getElementById('pill-d-city').textContent = name;
+        document.getElementById('pill-dropoff').classList.add('set');
+        document.getElementById('f-d2').value = name;
+        // Draw route
+        const line = document.getElementById('m2-route');
+        line.setAttribute('x1', px); line.setAttribute('y1', py);
+        line.setAttribute('x2', dx); line.setAttribute('y2', dy);
+        line.style.display = '';
+        // Distance
+        const c1 = cityCoords2[p2], c2 = cityCoords2[d2];
+        if (c1 && c2) {
+          const km = haversine2(c1.lat, c1.lng, c2.lat, c2.lng);
+          document.getElementById('db-km').textContent = km.toLocaleString() + ' km';
+          document.getElementById('db-label').textContent = 'approx. driving distance';
+          document.getElementById('dist-badge').classList.add('show');
+        }
+        document.getElementById('map2-hint').textContent = `Route set: ${p2} → ${d2}. Click to reset.`;
+        document.getElementById('map2-hint-bottom').textContent = '✅ Route set — click to change';
+        mapStep = 'pickup';
+      }
+    });
+  });
+
+  function selectType(el, val) {
+    document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('f2-truck-type').value = val;
+  }
+
+  function selectPri(el, val) {
+    document.querySelectorAll('.pri-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('f2-priority').value = val;
+  }
+
+  function submitForm2() {
+    const req = ['f2-fname','f2-lname','f2-phone','f2-email'];
+    let ok = true;
+    req.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) { el.style.borderColor = '#ef4444'; ok = false; }
+      else el.style.borderColor = '';
+    });
+    const pu = document.getElementById('f-p2').value;
+    const dr = document.getElementById('f-d2').value;
+    if (!pu || !dr) { alert('Please select pickup and drop-off on the map.'); return; }
+    if (!ok) { alert('Please fill in all required fields.'); return; }
+
+    const body = `TruckMate Quote Request
+=========================
+Route: ${pu} → ${dr}
+
+Contact:
+Name: ${document.getElementById('f2-fname').value} ${document.getElementById('f2-lname').value}
+Company: ${document.getElementById('f2-company').value || 'N/A'}
+Phone: ${document.getElementById('f2-phone').value}
+Email: ${document.getElementById('f2-email').value}
+Preferred Contact: ${document.getElementById('f2-contact-pref').value}
+
+Vehicle:
+Type: ${document.getElementById('f2-truck-type').value || 'Not specified'}
+Make/Model: ${document.getElementById('f2-make').value} ${document.getElementById('f2-model').value}
+Year: ${document.getElementById('f2-year').value}
+Dimensions: ${document.getElementById('f2-len').value}L × ${document.getElementById('f2-wid').value}W × ${document.getElementById('f2-hgt').value}H (metres)
+Weight: ${document.getElementById('f2-weight').value}t
+Condition: ${document.getElementById('f2-condition').value}
+Oversize: ${document.getElementById('f2-oversize').value}
+
+Shipment:
+Pickup Date: ${document.getElementById('f2-date').value}
+Flexibility: ${document.getElementById('f2-flex').value}
+Priority: ${document.getElementById('f2-priority').value}
+Notes: ${document.getElementById('f2-notes').value}`;
+
+    window.location.href = `mailto:quotes@truckmate.com.au?subject=Quote Request: ${pu} → ${dr}&body=${encodeURIComponent(body)}`;
+    document.getElementById('sov2').classList.add('show');
+  }
+</script>
+<!-- Hidden route inputs -->
+<input type="hidden" id="f-p2" value="">
+<input type="hidden" id="f-d2" value="">
+</body>
+</html>
